@@ -44,6 +44,9 @@ $ yarn run start:dev
 # migrate database
 $ npx prisma migrate dev --name {name of migration file}
 
+# migrate database
+$ npx prisma db seed
+
 # production mode
 $ yarn run start:prod
 ```
