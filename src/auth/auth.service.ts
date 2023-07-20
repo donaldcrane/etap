@@ -28,7 +28,7 @@ export class AuthService {
   async login(data: any) {
     const user: any = await this.userService.findOneByPhone(data.phone);
     if (!user) {
-      throw new NotFoundException('Email does not exist.');
+      throw new NotFoundException('phone does not exist.');
     }
 
     const isMatch = await UsersService.comparePassword(

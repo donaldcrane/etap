@@ -6,6 +6,9 @@ export class UpdatePaystackDto extends PartialType(CreatePaystackDto) {
   reference: string;
 
   @ApiProperty()
+  status: string;
+
+  @ApiProperty()
   authorization: PaystackAuthorizationData;
 
   @ApiProperty()

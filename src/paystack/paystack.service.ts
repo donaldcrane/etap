@@ -108,7 +108,8 @@ export class PaystackService {
   }
 
   async verify(updatePaystackDto: UpdatePaystackDto) {
-    const { reference, amount, authorization } = updatePaystackDto;
+    const { reference, amount, authorization, status } = updatePaystackDto;
+    console.log(updatePaystackDto);
     const transaction = await this.prisma.transactions.findUnique({
       where: {
         reference,
@@ -121,6 +122,18 @@ export class PaystackService {
     if (amount / 100 !== transaction.amount)
       return new ConflictException('transaction amount mismatch');
 
+    if (status !== 'success') {
+      await this.prisma.transactions.update({
+        where: {
+          reference,
+        },
+        data: {
+          status: enum_Transactions_status.failed,
+          confirmed: false,
+        },
+      });
+      return new ConflictException('transaction was not successful');
+    }
     const {
       last4,
       authorization_code: authorizationCode,
