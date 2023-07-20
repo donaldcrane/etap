@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id           Int             @id @default(autoincrement())
+  email        String?         @unique @db.VarChar(255)
+  phone        String          @unique @db.VarChar(255)
+  password     String
+  firstName    String
+  lastName     String
+  role         enum_Users_role
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @default(now()) @updatedAt
+  wallet       Wallets[]
+  transactions Transactions[]
+  card         Card[]
+  debits       Debits[]
+}
+
+model Wallets {
+  id        Int                  @id @default(autoincrement())
+  userId    Int
+  currency  enum_Wallet_Currency
+  balance   Int                  @default(0)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @default(now()) @updatedAt
+
+  user         Users?         @relation(fields: [userId], references: [id])
+  transactions Transactions[]
+  debits       Debits[]
+
+  @@unique([userId, currency])
+}
+
+model Transactions {
+  id        Int                      @id @default(autoincrement())
+  status    enum_Transactions_status @default(pending)
+  type      enum_Transactions_type
+  amount    Float
+  currency  enum_Wallet_Currency
+  userId    Int
+  confirmed Boolean                  @default(false)
+  reference String?                  @unique @db.VarChar(255)
+  saveCard  Boolean                  @default(false)
+  cardId    Int?
+  walletId  Int
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @default(now()) @updatedAt
+  user      Users                    @relation(fields: [userId], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  card      Card?                    @relation(fields: [cardId], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  wallet    Wallets?                 @relation(fields: [walletId], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  debit     Debits?
+}
+
+model Debits {
+  id            Int                      @id @default(autoincrement())
+  status        enum_Transactions_status @default(pending)
+  type          enum_Transactions_type   @default(walletTransfer)
+  amount        Float
+  currency      enum_Wallet_Currency
+  userId        Int
+  confirmed     Boolean?                 @default(false)
+  reference     String                   @unique @db.VarChar(255)
+  exchangeRate  Int
+  walletId      Int
+  transactionId Int                      @unique
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @default(now()) @updatedAt
+  user          Users                    @relation(fields: [userId], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  wallet        Wallets?                 @relation(fields: [walletId], references: [id], onUpdate: Restrict, onDelete: Cascade)
+  credit        Transactions?            @relation(fields: [transactionId], references: [id], onUpdate: Restrict, onDelete: Cascade)
+}
+
+model Card {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  cardType          String
+  expirationMonth   String
+  expirationYear    String
+  last4             String
+  authorizationCode String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+
+  user         Users          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transactions[]
+}
+
+enum enum_Transactions_status {
+  pending
+  success
+  failed
+}
+
+enum enum_Transactions_type {
+  walletTransfer
+  fundAccount
+}
+
+enum enum_Users_role {
+  user
+  admin
+}
+
+enum enum_Wallet_Currency {
+  dollars
+  naira
+  pounds
+  euro
+  yen
+  cefa
+  rand
+  cad
+}
