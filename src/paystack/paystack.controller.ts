@@ -51,7 +51,7 @@ export class PaystackController {
       case PaystackWebhookEnum.CHARGE_SUCCESS:
         return this.paystackService.verify(data);
       default:
-        throw new BadRequestException('unknownEventError');
+        throw new BadRequestException('unknown event Error');
     }
   }
 }
